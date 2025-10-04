@@ -1,0 +1,6 @@
+@Sereno_HostAddress = http://localhost:5194
+
+GET {{Sereno_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
