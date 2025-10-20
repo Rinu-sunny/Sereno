@@ -1,26 +1,133 @@
 import { useState } from "react";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '../supabaseClient'; // Import Supabase client
+import axios from 'axios';                  // Import Axios for API calls
 
+// --- Function to fetch data from your backend ---
+async function fetchDataFromBackend(token: string) {
+  try {
+    const backendUrl = 'https://localhost:5001/api/tasks'; // Your backend API endpoint
+
+    console.log('Attempting to fetch data from backend...'); 
+
+    const response = await axios.get(backendUrl, {
+      headers: { 
+        'Authorization': `Bearer ${token}` // Attach the JWT token
+      }
+    });
+
+    console.log('Data from backend:', response.data); 
+    alert('Successfully fetched data from backend!'); // Simple success alert
+
+  } catch (error: any) {
+    console.error('Error fetching data from backend:', error);
+    // Handle different types of errors (Network, HTTP status codes, etc.)
+    if (axios.isAxiosError(error)) {
+       if (error.message.includes('Network Error')) {
+           alert('Network Error: Could not connect to backend. Is it running? Is CORS configured correctly in Program.cs?');
+       } else if (error.response) {
+           alert(`Error fetching data: ${error.response.status} - ${error.message}`);
+       } else {
+           alert(`Axios error: ${error.message}`);
+       }
+    } else {
+       alert('An unknown error occurred while fetching data.');
+    }
+  }
+}
+
+// --- Your Auth Component ---
 const Auth = () => {
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(""); // Used only for sign up
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // --- Handles both Login and Sign Up ---
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // This is where you'll connect to backend authentication
-    toast({
-      title: isLogin ? "Login Successful" : "Account Created",
-      description: isLogin
-        ? "Welcome back! Redirecting to timer..."
-        : "Your account has been created successfully.",
-    });
+    try {
+      let sessionData;
+      let authError;
+
+      if (isLogin) {
+        // --- Login Logic ---
+        console.log("Attempting login...");
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+        sessionData = data;
+        authError = error;
+        
+      } else {
+        // --- Sign Up Logic ---
+        console.log("Attempting sign up...");
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            // Include user's name if signing up
+            data: { 
+              full_name: name 
+            }
+          }
+        });
+         sessionData = data;
+         authError = error;
+         // Note: Supabase might require email confirmation by default.
+      }
+
+      // --- Handle Login/Sign Up Errors ---
+      if (authError) {
+        console.error(isLogin ? 'Login failed:' : 'Sign up failed:', authError.message);
+        toast({
+          title: isLogin ? "Login Failed" : "Sign Up Failed",
+          description: authError.message,
+          variant: "destructive",
+        });
+        return; // Stop execution if there's an error
+      }
+
+      // --- Get the JWT Token ---
+      const jwtToken = sessionData?.session?.access_token;
+
+      // Check if token exists (might not immediately after sign up if email confirmation is needed)
+      if (!jwtToken) {
+         console.error('Auth successful but no session/token found. Email confirmation might be needed.');
+          toast({
+            title: isLogin ? "Login Issue" : "Sign Up Pending",
+            description: isLogin ? "Could not retrieve session token." : "Account created. Please check your email for confirmation (if enabled).",
+          });
+         // Don't call backend if no token
+         return; 
+      }
+
+      // --- Authentication Success ---
+      console.log(isLogin ? 'Login successful!' : 'Sign up successful!', 'Token:', jwtToken);
+      toast({
+        title: isLogin ? "Login Successful" : "Account Created",
+        description: isLogin ? "Welcome back!" : "Account created successfully.",
+      });
+
+      // --- Call Your Backend API ---
+      await fetchDataFromBackend(jwtToken); 
+
+    } catch (err: any) {
+      // Handle unexpected errors during the process
+      console.error('Unexpected auth error:', err);
+      toast({
+        title: "Error",
+        description: err.message || "An unexpected error occurred during authentication.",
+        variant: "destructive",
+      });
+    }
   };
 
+  // --- The JSX for your form (unchanged from your original code) ---
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background gradient */}
@@ -123,7 +230,7 @@ const Auth = () => {
           </div>
         </form>
 
-        {/* Social Login */}
+        {/* Social Login (unchanged) */}
         <div className="glass-panel rounded-2xl p-6 space-y-4">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

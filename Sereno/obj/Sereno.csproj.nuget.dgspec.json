@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\programs\\Sereno\\Sereno\\Sereno.csproj": {}
+    "D:\\sereno\\Sereno\\Sereno\\Sereno.csproj": {}
   },
   "projects": {
-    "D:\\programs\\Sereno\\Sereno\\Sereno.csproj": {
+    "D:\\sereno\\Sereno\\Sereno\\Sereno.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\programs\\Sereno\\Sereno\\Sereno.csproj",
+        "projectUniqueName": "D:\\sereno\\Sereno\\Sereno\\Sereno.csproj",
         "projectName": "Sereno",
-        "projectPath": "D:\\programs\\Sereno\\Sereno\\Sereno.csproj",
-        "packagesPath": "C:\\Users\\rinus\\.nuget\\packages\\",
-        "outputPath": "D:\\programs\\Sereno\\Sereno\\obj\\",
+        "projectPath": "D:\\sereno\\Sereno\\Sereno\\Sereno.csproj",
+        "packagesPath": "C:\\Users\\tanma\\.nuget\\packages\\",
+        "outputPath": "D:\\sereno\\Sereno\\Sereno\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\rinus\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\tanma\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -76,6 +69,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[9.0.4, )"
+            },
+            "supabase-csharp": {
+              "target": "Package",
+              "version": "[0.16.2, )"
             }
           },
           "imports": [
@@ -97,7 +94,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

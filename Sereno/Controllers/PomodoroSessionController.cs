@@ -175,7 +175,7 @@ namespace Sereno.Controllers
                         }
                         catch { }
 
-                        _context.Tasks.Remove(task);
+                        
                     }
                 }
             }
