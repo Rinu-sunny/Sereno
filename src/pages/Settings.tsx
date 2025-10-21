@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Save, Bell, Clock, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+import { supabase } from "../supabaseClient";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { useSettings } from "@/context/SettingsContext";
+import SettingsSkeleton from '@/components/skeletons/SettingsSkeleton';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -9,13 +16,146 @@ const Settings = () => {
   const [longBreakLength, setLongBreakLength] = useState(15);
   const [notifications, setNotifications] = useState(true);
   const [sound, setSound] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const navigate = useNavigate();
+  const { authChecked, isAuthenticated } = useAuth();
+  const { applyLocal, refresh } = useSettings();
 
-  const handleSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Your preferences have been updated successfully.",
-    });
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSettings() {
+      try {
+        // Only attempt to load if authenticated
+        if (!authChecked) return;
+        if (!isAuthenticated) {
+          navigate("/auth", { replace: true });
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+
+        // Try HTTPS first, then fallback to HTTP to avoid dev-cert issues
+        const httpsUrl = `https://localhost:5001/api/UserSettings`;
+        const httpUrl = `http://localhost:5000/api/UserSettings`;
+        let resp;
+        try {
+          resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });
+        } catch (e) {
+          // fallback to http
+          resp = await axios.get(httpUrl, { headers: { Authorization: `Bearer ${token}` } });
+        }
+
+        if (!mounted) return;
+
+        const s = resp.data;
+        // Map backend fields to local state where possible
+        if (typeof s.workDuration === "number") setPomodoroLength(s.workDuration);
+        if (typeof s.shortBreakDuration === "number") setShortBreakLength(s.shortBreakDuration);
+        if (typeof s.longBreakDuration === "number") setLongBreakLength(s.longBreakDuration);
+        if (typeof s.notificationsEnabled === "boolean") setNotifications(s.notificationsEnabled);
+        if (typeof s.alarmSound === "string") setSound(s.alarmSound !== "muted");
+
+        // Update context so Timer picks up new values
+        applyLocal({
+          workDuration: typeof s.workDuration === "number" ? s.workDuration : undefined,
+          shortBreakDuration: typeof s.shortBreakDuration === "number" ? s.shortBreakDuration : undefined,
+          longBreakDuration: typeof s.longBreakDuration === "number" ? s.longBreakDuration : undefined,
+        });
+
+      } catch (err) {
+        if (!mounted) return;
+        // If 404 — no settings yet, keep defaults. If 401 — redirect to auth.
+        if (axios.isAxiosError(err)) {
+          if (err.response?.status === 401) navigate("/auth", { replace: true });
+        }
+      }
+    }
+
+    loadSettings();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate, authChecked, isAuthenticated, applyLocal]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        toast({
+          title: "Not authenticated",
+          description: "Please sign in before saving settings.",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      // Build payload matching backend UserSetting DTO
+      const payload = {
+        workDuration: pomodoroLength,
+        shortBreakDuration: shortBreakLength,
+        longBreakDuration: longBreakLength,
+        pomodorosBeforeLongBreak: 4,
+        theme: "light",
+        alarmSound: sound ? "default" : "muted",
+        notificationsEnabled: notifications,
+      };
+
+      // Try HTTPS first then HTTP fallback (local dev cert may be untrusted)
+      const httpsUrl = `https://localhost:5001/api/UserSettings`;
+      const httpUrl = `http://localhost:5000/api/UserSettings`;
+
+      try {
+        await axios.put(httpsUrl, payload, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        // try HTTP fallback
+        await axios.put(httpUrl, payload, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        });
+      }
+
+      // Update context immediately and try refreshing from backend
+      applyLocal({
+        workDuration: payload.workDuration,
+        shortBreakDuration: payload.shortBreakDuration,
+        longBreakDuration: payload.longBreakDuration,
+      });
+
+      // Optional: best-effort backend refresh (ignore errors)
+  try { await refresh(); } catch (e) { /* ignore refresh errors */ }
+
+      toast({ title: "Settings Saved", description: "Your preferences have been updated." });
+    } catch (err: unknown) {
+      console.error("Error saving settings:", err);
+      let message = "Could not save settings.";
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data || err.message || message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "string") {
+        message = err;
+      }
+
+      toast({
+        title: "Save Failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (!authChecked) return <SettingsSkeleton />;
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4">
@@ -132,12 +272,15 @@ const Settings = () => {
         {/* Save Button */}
         <button
           onClick={handleSave}
-          className="w-full py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 font-semibold"
+          disabled={isSaving}
+          className={`w-full py-4 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 font-semibold ${
+            isSaving ? "bg-white/10 text-muted-foreground cursor-wait" : "bg-primary text-primary-foreground hover:bg-primary/90"
+          }`}
         >
           <Save className="w-5 h-5" />
-          Save Settings
+          {isSaving ? "Saving..." : "Save Settings"}
         </button>
-      </div>
+        </div>
     </div>
   );
 };

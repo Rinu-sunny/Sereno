@@ -58,7 +58,7 @@ namespace Sereno.Controllers
         {
             var userId = GetUserId();
             var end = DateTime.UtcNow.Date;
-            var start = end.AddMonths(-Math.Max(1, months) + 1);
+            var start = end.AddDays(-29); // Gets a 30-day range, inclusive
 
             var rows = await _context.AnalyticsDaily
                 .Where(a => a.UserId == userId && a.Date >= start && a.Date <= end)

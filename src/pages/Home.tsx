@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import HomeSkeleton from '@/components/skeletons/HomeSkeleton';
+import { useAuth } from '@/context/AuthContext';
 import { Timer, CheckCircle, TrendingUp, Zap } from "lucide-react";
 
 const Home = () => {
@@ -26,7 +28,14 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    (() => {
+      const { authChecked } = useAuth();
+  if (!authChecked) return <HomeSkeleton />;
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 -z-10" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1),transparent_50%)] -z-10" />
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 -z-10" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1),transparent_50%)] -z-10" />
@@ -78,6 +87,8 @@ const Home = () => {
         </div>
       </div>
     </div>
+      );
+    })()
   );
 };
 

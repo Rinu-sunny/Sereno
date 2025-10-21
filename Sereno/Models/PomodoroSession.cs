@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sereno.Models
 {
+    [Table("pomodoro_sessions")]
     public class PomodoroSession
     {
         /// <summary>

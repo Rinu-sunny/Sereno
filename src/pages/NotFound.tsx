@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Home, AlertCircle } from "lucide-react";
+import NotFoundSkeleton from '@/components/skeletons/NotFoundSkeleton';
+import { useAuth } from '@/context/AuthContext';
 
 const NotFound = () => {
   const location = useLocation();
@@ -8,6 +10,9 @@ const NotFound = () => {
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
+
+  const { authChecked } = useAuth();
+  if (!authChecked) return <NotFoundSkeleton />;
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">

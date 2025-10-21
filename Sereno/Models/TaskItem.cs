@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sereno.Models
 {
+    [Table("tasks")]
     public class TaskItem
     {
          public ICollection<PomodoroSession> PomodoroSessions { get; set; } = new List<PomodoroSession>();
@@ -68,15 +69,15 @@ namespace Sereno.Models
         /// Tags associated with the task stored as JSON array string.
         /// Example: [{"label":"study","color":"#ff0"}]
         /// </summary>
-        [Required]
-        [Column("tags")]
-        public string Tags { get; set; } = "[]";
+[Required]
+[Column("tags", TypeName = "jsonb")]
+public string Tags { get; set; } = "[]";
 
         /// <summary>
         /// Ordering index for sorting tasks.
         /// </summary>
         [Required]
-        [Column("\"order\"")]
+        [Column("order")]
         public int Order { get; set; } = 0;
 
         /// <summary>
