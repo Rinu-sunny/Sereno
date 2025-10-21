@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sereno.Models
 {
+    [Table("user_streaks")]
     public class UserStreaks
     {
         /// <summary>

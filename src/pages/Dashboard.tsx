@@ -1,12 +1,135 @@
 import { BarChart3, Clock, CheckCircle, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, authChecked } = useAuth();
+  const { pendingPath } = useAuth();
+  const { session } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<any | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+
+  // Auto-redirect unauthenticated users once authChecked
+  useEffect(() => {
+    if (!authChecked) return;
+    if (isAuthenticated === false) {
+      navigate("/auth", { replace: true });
+    }
+    console.debug('[Dashboard] authChecked=', authChecked, 'isAuthenticated=', isAuthenticated, 'pendingPath=', pendingPath);
+  }, [isAuthenticated, authChecked, navigate]);
+
+  // Data load effect — kept near the top so hooks order is stable across renders
+  useEffect(() => {
+    if (!authChecked) return;
+    if (!isAuthenticated) return;
+
+    let mounted = true;
+    let timeoutHandle: NodeJS.Timeout | null = null;
+
+    const load = async () => {
+      setLoading(true);
+      setTimedOut(false);
+      setError(null);
+      try {
+        const token = session?.access_token;
+        if (!token) throw new Error("No auth token");
+        // prefer https backend but allow http fallback (dev cert)
+        const httpsUrl = "https://localhost:5001/api/Analytics/weekly";
+        const httpUrl = "http://localhost:5000/api/Analytics/weekly";
+        let resp;
+        try {
+          resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });
+        } catch (err) {
+          resp = await axios.get(httpUrl, { headers: { Authorization: `Bearer ${token}` } });
+        }
+        // artificial small delay so the skeleton is visible briefly and the UI feels smoother
+        await new Promise((res) => setTimeout(res, 600));
+        if (!mounted) return;
+        setData(resp.data);
+      } catch (err: any) {
+        if (!mounted) return;
+        setError(err?.message || "Failed to load analytics");
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+
+    // start a timeout — if loading takes too long, mark timedOut so we can show fallback UI
+    timeoutHandle = setTimeout(() => {
+      if (mounted && loading) setTimedOut(true);
+    }, 4000);
+
+    void load();
+
+    return () => {
+      mounted = false;
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    };
+  }, [authChecked, isAuthenticated, session]);
+
+  const retry = () => {
+    setTimedOut(false);
+    setError(null);
+    setData(null);
+    // trigger effect by re-running fetch inline
+    (async () => {
+      setLoading(true);
+      try {
+        const token = session?.access_token;
+        if (!token) throw new Error('No auth token');
+        const httpsUrl = 'https://localhost:5001/api/Analytics/weekly';
+        const httpUrl = 'http://localhost:5000/api/Analytics/weekly';
+        let resp;
+        try {
+          resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });
+        } catch (err) {
+          resp = await axios.get(httpUrl, { headers: { Authorization: `Bearer ${token}` } });
+        }
+        await new Promise((res) => setTimeout(res, 600));
+        setData(resp.data);
+      } catch (err: any) {
+        setError(err?.message || 'Failed to load analytics');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  };
+
+  // If navigation is pending to this route, show the dashboard skeleton instead of returning null
+  // This prevents a permanent blank screen if pendingPath remains set briefly.
+  if (pendingPath && pendingPath.toString().startsWith("/dashboard")) return <DashboardSkeleton />;
+
+  console.debug('[Dashboard] loading=', loading, 'data=', data, 'error=', error, 'timedOut=', timedOut);
+  if (!authChecked || loading) return <DashboardSkeleton />;
+
+  if (timedOut) {
+    return (
+      <div className="min-h-screen pt-24 pb-12 px-4">
+        <div className="max-w-3xl mx-auto mt-12 p-8 glass-panel rounded-2xl text-center">
+          <h2 className="text-2xl font-bold">Loading is taking longer than expected</h2>
+          <p className="text-muted-foreground mt-2">We couldn't fetch your analytics right now. You can retry or continue with sample data.</p>
+          <div className="mt-6 flex gap-4 justify-center">
+            <button onClick={() => retry()} className="py-2 px-4 bg-primary text-primary-foreground rounded-lg">Retry</button>
+            <button onClick={() => setTimedOut(false)} className="py-2 px-4 bg-white/10 rounded-lg">Use sample data</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Mock data - replace with real data from backend later
-  const stats = [
+  let stats = [
     {
       icon: Clock,
       label: "Total Focus Time",
-      value: "12h 30m",
+      value: "—",
       color: "text-primary",
       bgColor: "bg-primary/20",
     },
@@ -33,15 +156,44 @@ const Dashboard = () => {
     },
   ];
 
-  const recentSessions = [
-    { date: "2025-01-15", sessions: 6, duration: "2h 30m" },
-    { date: "2025-01-14", sessions: 8, duration: "3h 20m" },
-    { date: "2025-01-13", sessions: 5, duration: "2h 5m" },
-    { date: "2025-01-12", sessions: 7, duration: "2h 55m" },
-  ];
+  let recentSessions: Array<{ date: string; sessions: number; duration: string }> = [];
+
+  if (data) {
+    // Map server data to UI-friendly shapes
+    stats = [
+      { icon: Clock, label: "Total Focus Time", value: `${Math.floor((data.totalFocus||0)/60)}h ${ (data.totalFocus||0) % 60 }m`, color: "text-primary", bgColor: "bg-primary/20" },
+      { icon: CheckCircle, label: "Sessions Completed", value: `${data.totalSessions ?? 0}`, color: "text-accent", bgColor: "bg-accent/20" },
+      { icon: TrendingUp, label: "Current Streak", value: `${data.streak ?? 0} days`, color: "text-secondary", bgColor: "bg-secondary/20" },
+      { icon: BarChart3, label: "Tasks Completed", value: `${data.tasksCompleted ?? 0}`, color: "text-destructive", bgColor: "bg-destructive/20" },
+    ];
+
+    recentSessions = (data.perDay || []).map((d: any) => ({ date: new Date(d.date).toISOString().slice(0,10), sessions: d.totalSessions || 0, duration: `${Math.floor((d.totalFocusMinutes||0)/60)}h ${ (d.totalFocusMinutes||0) % 60 }m` }));
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4">
+      
+      {/* If we haven't checked auth yet, avoid flashing content */}
+      {!authChecked && (
+        <div className="max-w-3xl mx-auto mt-12 p-8 glass-panel rounded-2xl text-center">
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      )}
+
+      {!authChecked ? null : isAuthenticated === false ? (
+        <div className="max-w-3xl mx-auto mt-12 p-8 glass-panel rounded-2xl text-center">
+          <h2 className="text-2xl font-bold text-foreground">Not signed in</h2>
+          <p className="text-muted-foreground mt-2">Please sign in to view your dashboard and personalized data.</p>
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => navigate('/auth')}
+              className="py-3 px-6 bg-primary text-primary-foreground rounded-lg font-semibold"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="space-y-2">
@@ -107,6 +259,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

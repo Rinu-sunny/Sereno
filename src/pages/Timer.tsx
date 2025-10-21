@@ -1,14 +1,23 @@
 import { useState, useEffect } from "react";
 import { Play, Pause, RotateCcw, SkipForward } from "lucide-react";
 import TimerCircle from "@/components/TimerCircle";
+import { useSettings } from "@/context/SettingsContext";
 import TaskPanel from "@/components/TaskPanel";
+import TimerSkeleton from '@/components/skeletons/TimerSkeleton';
+import { useAuth } from '@/context/AuthContext';
 
 const Timer = () => {
-  const pomodoro = 25 * 60;
-  const shortBreak = 5 * 60;
-  const longBreak = 15 * 60;
+  const { settings } = useSettings();
+  const { authChecked } = useAuth();
+  // Sanitize settings values to avoid NaN (could happen if backend returns unexpected types)
+  const workMinutes = Number(settings?.workDuration) || 25;
+  const shortMinutes = Number(settings?.shortBreakDuration) || 5;
+  const longMinutes = Number(settings?.longBreakDuration) || 15;
+  const pomodoro = workMinutes * 60;
+  const shortBreak = shortMinutes * 60;
+  const longBreak = longMinutes * 60;
 
-  const [time, setTime] = useState(pomodoro);
+  const [time, setTime] = useState<number>(pomodoro);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<"pomodoro" | "short-break" | "long-break">("pomodoro");
 
@@ -37,11 +46,22 @@ const Timer = () => {
     setIsRunning(false);
   };
 
+  // If settings change while staying in same mode, update remaining time proportionally only when not running
+  useEffect(() => {
+    if (isRunning) return;
+    if (mode === "pomodoro") setTime(pomodoro);
+    if (mode === "short-break") setTime(shortBreak);
+    if (mode === "long-break") setTime(longBreak);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.workDuration, settings.shortBreakDuration, settings.longBreakDuration, mode]);
+
   const modes = [
     { value: "pomodoro", label: "Pomodoro" },
     { value: "short-break", label: "Short Break" },
     { value: "long-break", label: "Long Break" },
   ] as const;
+
+  if (!authChecked) return <TimerSkeleton />;
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4">
