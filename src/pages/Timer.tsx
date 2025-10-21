@@ -20,6 +20,8 @@ const Timer = () => {
   const [time, setTime] = useState<number>(pomodoro);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<"pomodoro" | "short-break" | "long-break">("pomodoro");
+  // count completed pomodoros; after 4 pomodoros trigger a long break
+  const [pomodoroCount, setPomodoroCount] = useState<number>(0);
 
   const totalTime =
     mode === "pomodoro" ? pomodoro : mode === "short-break" ? shortBreak : longBreak;
@@ -31,18 +33,38 @@ const Timer = () => {
     } else if (time === 0) {
       setIsRunning(false);
       // Play sound or notification here
-      alert("Time's up!");
+      // Auto-advance behavior:
+      // - If we just finished a pomodoro, increment pomodoroCount and go to short-break or long-break
+      // - If we just finished a break, go back to pomodoro
+      if (mode === "pomodoro") {
+        const nextCount = pomodoroCount + 1;
+        setPomodoroCount(nextCount);
+        const giveLong = nextCount % 4 === 0;
+        if (giveLong) {
+          setMode("long-break");
+          setTime(longBreak);
+        } else {
+          setMode("short-break");
+          setTime(shortBreak);
+        }
+      } else {
+        // finished any break -> back to pomodoro
+        setMode("pomodoro");
+        setTime(pomodoro);
+      }
     }
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isRunning, time]);
+  }, [isRunning, time, mode, pomodoroCount, pomodoro, shortBreak, longBreak]);
 
   const switchMode = (newMode: "pomodoro" | "short-break" | "long-break") => {
     setMode(newMode);
     if (newMode === "pomodoro") setTime(pomodoro);
     if (newMode === "short-break") setTime(shortBreak);
     if (newMode === "long-break") setTime(longBreak);
+    // If user manually switches to pomodoro, do not reset the pomodoroCount here.
+    // If user manually selects a break and it's long-break, we'll keep the count as-is.
     setIsRunning(false);
   };
 
