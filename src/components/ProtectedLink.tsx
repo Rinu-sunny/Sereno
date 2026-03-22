@@ -24,12 +24,10 @@ const ProtectedLink: React.FC<Props> = ({ protected: isProtected = false, to, ch
     // If auth checked and user is unauthenticated, prevent and redirect to /auth
     if (!isAuthenticated) {
       e.preventDefault();
-      setPendingPath?.(to as string);
-      // use next tick to let skeleton render
-      setTimeout(() => {
-        setPendingPath?.(null);
-        navigate("/auth", { replace: true });
-      }, 40);
+      // Direct redirect avoids a brief protected-page skeleton flash.
+      setPendingPath?.(null);
+      setPendingClosing?.(false);
+      navigate("/auth", { replace: true, state: { from: to as string } });
       return;
     }
   };
@@ -54,7 +52,9 @@ const ProtectedLink: React.FC<Props> = ({ protected: isProtected = false, to, ch
       doNavigate(to as string);
     } else {
       // not authenticated -> go to auth
-      doNavigate("/auth");
+      navigate("/auth", { replace: true, state: { from: to as string } });
+      setPendingPath?.(null);
+      setPendingClosing?.(false);
     }
     // only respond to first resolution
     // eslint-disable-next-line react-hooks/exhaustive-deps

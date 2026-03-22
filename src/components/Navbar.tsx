@@ -107,9 +107,10 @@ const Navbar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <Link
+                <ProtectedLink
                   key={item.path}
                   to={item.path}
+                  protected={item.path === "/dashboard" || item.path === "/settings"}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 ${
                     isActive(item.path)
@@ -119,7 +120,7 @@ const Navbar = () => {
                 >
                   <Icon className="w-5 h-5" />
                   {item.label}
-                </Link>
+                </ProtectedLink>
               );
             })}
             {/* Dark Mode Toggle in Mobile Menu */}

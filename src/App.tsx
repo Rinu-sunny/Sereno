@@ -5,10 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/AuthContext";
 import NavigationSkeleton from "./components/NavigationSkeleton";
-import { useSettings } from "./context/SettingsContext";
-import { useEffect } from "react";
+import { SettingsProvider } from "./context/SettingsContext";
 import Home from "./pages/Home";
 import Timer from "./pages/Timer";
 import Dashboard from "./pages/Dashboard";
@@ -20,15 +19,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const AppInner = () => {
-  const { authChecked, isAuthenticated } = useAuth();
-  const { refresh } = useSettings();
-
-  // Load saved settings once authenticated so Timer uses persisted durations
-  useEffect(() => {
-    if (!authChecked || !isAuthenticated) return;
-    void refresh();
-  }, [authChecked, isAuthenticated, refresh]);
-
   return (
     // Main App Container with dark mode background
     <div className="min-h-screen bg-background text-foreground dark:bg-gray-900 dark:text-white transition-colors duration-300">
@@ -68,7 +58,9 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <AppInner />
+            <SettingsProvider>
+              <AppInner />
+            </SettingsProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

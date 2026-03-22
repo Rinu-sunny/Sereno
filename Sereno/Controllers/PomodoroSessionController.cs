@@ -130,15 +130,20 @@ namespace Sereno.Controllers
                 _context.AnalyticsDaily.Add(analytics);
             }
 
-            analytics.TotalSessions++;
+            // Treat one completed work Pomodoro as one completed session in analytics.
             if (session.Type == "work")
+            {
+                analytics.TotalSessions++;
                 analytics.TotalFocusMinutes += session.DurationMinutes;
+            }
             else
+            {
                 analytics.TotalBreakMinutes += session.DurationMinutes;
+            }
 
             analytics.UpdatedAt = DateTime.UtcNow;
 
-            if (session.TaskId.HasValue)
+            if (session.Type == "work" && session.TaskId.HasValue)
             {
                 var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == session.TaskId && t.UserId == userId);
                 if (task != null)

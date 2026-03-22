@@ -292,3 +292,15 @@ D:\sereno\Sereno\Sereno\obj\Debug\net9.0\Sereno.pdb
 D:\sereno\Sereno\Sereno\obj\Debug\net9.0\Sereno.genruntimeconfig.cache
 D:\sereno\Sereno\Sereno\obj\Debug\net9.0\ref\Sereno.dll
 D:\sereno\Sereno\Sereno\bin\Debug\net9.0\System.Text.Json.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.Functions.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.Gotrue.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\MimeMapping.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Newtonsoft.Json.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.Postgrest.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.Realtime.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.Core.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Supabase.Storage.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\System.Reactive.dll
+D:\programs\Sereno\Sereno\bin\Debug\net9.0\Websocket.Client.dll
+D:\programs\Sereno\Sereno\obj\Debug\net9.0\Sereno.sourcelink.json
