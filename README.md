@@ -2,7 +2,11 @@
 
 Sereno is a Pomodoro productivity app for focused work, task tracking, and personal productivity insights.
 It lets users sign in, run timer sessions, manage tasks, and view analytics and streak progress.
-
+## Team members
+  - Rinu Sunny Mathew
+  - Swantin Jo Mathew
+  - Tanmay Suresh
+  - Adarsh K P
 ## Features
 
 - Pomodoro timer with work, short-break, and long-break modes
