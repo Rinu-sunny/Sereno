@@ -1,73 +1,103 @@
-# Welcome to your Lovable project
+# Sereno
 
-## Project info
+Sereno is a Pomodoro productivity app for focused work, task tracking, and personal productivity insights.
+It lets users sign in, run timer sessions, manage tasks, and view analytics and streak progress.
 
-**URL**: https://lovable.dev/projects/d6c67c80-d1f4-43ea-b76b-90812ef291f3
+## Features
 
-## How can I edit this code?
+- Pomodoro timer with work, short-break, and long-break modes
+- Start, pause, skip, and complete session actions
+- Task CRUD operations and task reordering
+- Session-based analytics (daily, weekly, monthly)
+- Tag-based task completion breakdown
+- User settings for durations, notifications, and alarm sound
+- Protected routes and authenticated API access
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+### Frontend
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d6c67c80-d1f4-43ea-b76b-90812ef291f3) and start prompting.
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui + Radix UI
+- React Router
+- Axios
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
 
-**Use your preferred IDE**
+- ASP.NET Core Web API (.NET 9)
+- Entity Framework Core 9
+- PostgreSQL (Supabase-hosted)
+- JWT Bearer authentication
+- Swagger/OpenAPI
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Complete Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
 
-Follow these steps:
+- Node.js 20+
+- npm 10+
+- .NET SDK 9.0+
+- Database + auth configuration available in backend app settings
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 1) Clone and enter project
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+git clone <your-repo-url>
+cd Sereno
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2) Install frontend dependencies
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
+```
+
+### 3) Confirm backend configuration
+
+Verify these files exist and have valid values:
+
+- Sereno/appsettings.json
+- Sereno/appsettings.Development.json
+
+Required backend keys:
+
+- ConnectionStrings:DefaultConnection
+- Authentication:SupabaseJwtSecret
+- Authentication:SupabaseIssuer
+
+## How to Run the Program
+
+Run backend and frontend in separate terminals from the repository root.
+
+### Terminal 1: Start backend API
+
+```bash
+dotnet run --project Sereno/Sereno.csproj
+```
+
+Backend URLs:
+
+- http://localhost:5000
+- https://localhost:5001
+- Swagger: https://localhost:5001/swagger
+
+### Terminal 2: Start frontend app
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Frontend URL:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- http://localhost:8080
 
-**Use GitHub Codespaces**
+### Open the app
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Visit http://localhost:8080
+- Sign in or create an account
+- Start a timer session and use tasks/dashboard/settings
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/d6c67c80-d1f4-43ea-b76b-90812ef291f3) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+If local HTTPS certificate trust fails in development, use the HTTP backend URL (http://localhost:5000) where applicable.
