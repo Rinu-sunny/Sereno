@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sereno", "Sereno\Sereno.csproj", "{8933B1F5-1AF0-A5A0-DF98-E1F4F5738F4E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8933B1F5-1AF0-A5A0-DF98-E1F4F5738F4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8933B1F5-1AF0-A5A0-DF98-E1F4F5738F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8933B1F5-1AF0-A5A0-DF98-E1F4F5738F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8933B1F5-1AF0-A5A0-DF98-E1F4F5738F4E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {087C7A3A-FE23-4507-9C8A-F0CEDE6DB3C2}
+	EndGlobalSection
+EndGlobal
