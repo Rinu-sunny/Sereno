@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // --- 1. ADD CORS POLICY HERE ---
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(
+    options.AddPolicy("AllowReactApp",
         policy =>
         {
             // Make sure this URL matches your frontend (check Terminal 2)
@@ -78,7 +78,7 @@ app.UseRouting();
 
 // --- 2. ADD CORS MIDDLEWARE HERE ---
 // It MUST be after UseRouting() and BEFORE UseAuthentication()/UseAuthorization()
-app.UseCors();
+app.UseCors("AllowReactApp");
 // ----------------------------------
 
 app.UseAuthentication();
