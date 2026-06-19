@@ -91,8 +91,8 @@ export const SettingsProvider: React.FC<React.PropsWithChildren> = ({ children }
       const token = session?.access_token ?? await getToken();
       if (!token) return;
 
-      const httpsUrl = "https://localhost:5001/api/UserSettings";
-      const httpUrl = "http://localhost:5000/api/UserSettings";
+      const httpsUrl = "https://sereno-u1sb.onrender.com/api/UserSettings";
+      const httpUrl = "https://sereno-u1sb.onrender.com/api/UserSettings";
       let resp;
       try {
         resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });

@@ -115,8 +115,8 @@ const Settings = () => {
         if (!token) return;
 
         // Try HTTPS first, then fallback to HTTP to avoid dev-cert issues
-        const httpsUrl = `https://localhost:5001/api/UserSettings`;
-        const httpUrl = `http://localhost:5000/api/UserSettings`;
+        const httpsUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
+        const httpUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
         let resp;
         try {
           resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });
@@ -217,8 +217,8 @@ const Settings = () => {
       saveLocalSettings(payload);
 
       // Try HTTPS first then HTTP fallback (local dev cert may be untrusted)
-      const httpsUrl = `https://localhost:5001/api/UserSettings`;
-      const httpUrl = `http://localhost:5000/api/UserSettings`;
+      const httpsUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
+      const httpUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
 
       let persistedToBackend = true;
       try {

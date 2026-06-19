@@ -15,9 +15,9 @@ builder.Services.AddCors(options =>
         {
             // Make sure this URL matches your frontend (check Terminal 2)
             policy.WithOrigins(
-                      "http://localhost:8080",  // Your frontend
-                      "http://localhost:8081",  // Vite often picks 8081 when 8080 is busy
-                      "https://localhost:5001" // Your backend (just in case)
+                      "https://sereno-u1sb.onrender.com",  // Your frontend
+                      "https://sereno-u1sb.onrender.com",  // Vite often picks 8081 when 8080 is busy
+                      "https://sereno-u1sb.onrender.com" // Your backend (just in case)
                   ) 
                   .AllowAnyHeader()
                   .AllowAnyMethod();

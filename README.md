@@ -84,9 +84,9 @@ dotnet run --project Sereno/Sereno.csproj
 
 Backend URLs:
 
-- http://localhost:5000
-- https://localhost:5001
-- Swagger: https://localhost:5001/swagger
+- https://sereno-u1sb.onrender.com
+- https://sereno-u1sb.onrender.com
+- Swagger: https://sereno-u1sb.onrender.com/swagger
 
 ### Terminal 2: Start frontend app
 
@@ -96,12 +96,12 @@ npm run dev
 
 Frontend URL:
 
-- http://localhost:8080
+- https://sereno-u1sb.onrender.com
 
 ### Open the app
 
-- Visit http://localhost:8080
+- Visit https://sereno-u1sb.onrender.com
 - Sign in or create an account
 - Start a timer session and use tasks/dashboard/settings
 
-If local HTTPS certificate trust fails in development, use the HTTP backend URL (http://localhost:5000) where applicable.
+If local HTTPS certificate trust fails in development, use the HTTP backend URL (https://sereno-u1sb.onrender.com) where applicable.

@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from "@/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
-const API_BASE_URL = "https://localhost:5001/api";
+const API_BASE_URL = "https://sereno-u1sb.onrender.com/api";
 const TIMER_STATE_KEY = "sereno-timer-state-v1";
 
 interface TimerTask {
@@ -144,7 +144,7 @@ const Timer = () => {
         const resp = await axios.post(`${API_BASE_URL}/PomodoroSession/start?${params.toString()}`, null, { headers });
         return resp.data?.id ?? null;
       } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
+        const httpBase = API_BASE_URL.replace("https://sereno-u1sb.onrender.com", "https://sereno-u1sb.onrender.com");
         const resp = await axios.post(`${httpBase}/PomodoroSession/start?${params.toString()}`, null, { headers });
         return resp.data?.id ?? null;
       }
@@ -162,7 +162,7 @@ const Timer = () => {
       try {
         await axios.post(`${API_BASE_URL}/PomodoroSession/complete/${id}`, null, { headers });
       } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
+        const httpBase = API_BASE_URL.replace("https://sereno-u1sb.onrender.com", "https://sereno-u1sb.onrender.com");
         await axios.post(`${httpBase}/PomodoroSession/complete/${id}`, null, { headers });
       }
     } catch (err) {
@@ -179,7 +179,7 @@ const Timer = () => {
         const resp = await axios.get<TimerTask[]>(`${API_BASE_URL}/tasks`, { headers });
         return resp.data;
       } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
+        const httpBase = API_BASE_URL.replace("https://sereno-u1sb.onrender.com", "https://sereno-u1sb.onrender.com");
         const resp = await axios.get<TimerTask[]>(`${httpBase}/tasks`, { headers });
         return resp.data;
       }
@@ -197,7 +197,7 @@ const Timer = () => {
       try {
         await axios.put(`${API_BASE_URL}/tasks/${task.id}`, task, { headers });
       } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
+        const httpBase = API_BASE_URL.replace("https://sereno-u1sb.onrender.com", "https://sereno-u1sb.onrender.com");
         await axios.put(`${httpBase}/tasks/${task.id}`, task, { headers });
       }
     } catch (err) {
@@ -241,7 +241,7 @@ const Timer = () => {
       try {
         await axios.post(`${API_BASE_URL}/PomodoroSession/skip/${id}`, null, { headers });
       } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
+        const httpBase = API_BASE_URL.replace("https://sereno-u1sb.onrender.com", "https://sereno-u1sb.onrender.com");
         await axios.post(`${httpBase}/PomodoroSession/skip/${id}`, null, { headers });
       }
     } catch (err) {

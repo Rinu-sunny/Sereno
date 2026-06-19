@@ -10,8 +10,8 @@ import AuthSkeleton from '@/components/skeletons/AuthSkeleton';
 // --- Function to fetch data from your backend ---
 async function fetchDataFromBackend(token: string) {
   try {
-    const httpsUrl = 'https://localhost:5001/api/tasks';
-    const httpUrl = 'http://localhost:5000/api/tasks';
+    const httpsUrl = 'https://sereno-u1sb.onrender.com/api/tasks';
+    const httpUrl = 'https://sereno-u1sb.onrender.com/api/tasks';
 
     console.log('Attempting to fetch data from backend (HTTPS first)...');
 

@@ -40,8 +40,8 @@ const Dashboard = () => {
         const token = session?.access_token;
         if (!token) throw new Error("No auth token");
         // prefer https backend but allow http fallback (dev cert)
-        const httpsUrl = "https://localhost:5001/api/Analytics/weekly";
-        const httpUrl = "http://localhost:5000/api/Analytics/weekly";
+        const httpsUrl = "https://sereno-u1sb.onrender.com/api/Analytics/weekly";
+        const httpUrl = "https://sereno-u1sb.onrender.com/api/Analytics/weekly";
         let resp;
         try {
           resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });
@@ -84,8 +84,8 @@ const Dashboard = () => {
       try {
         const token = session?.access_token;
         if (!token) throw new Error('No auth token');
-        const httpsUrl = 'https://localhost:5001/api/Analytics/weekly';
-        const httpUrl = 'http://localhost:5000/api/Analytics/weekly';
+        const httpsUrl = 'https://sereno-u1sb.onrender.com/api/Analytics/weekly';
+        const httpUrl = 'https://sereno-u1sb.onrender.com/api/Analytics/weekly';
         let resp;
         try {
           resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });

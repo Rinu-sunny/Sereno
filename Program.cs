@@ -7,40 +7,36 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. ADD CORS POLICY HERE ---
+// --- 1. ADD CORS POLICY ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            // Make sure this URL matches your frontend (check Terminal 2)
-            policy.WithOrigins(
-                      "http://localhost:8080",  // Your frontend
-                      "http://localhost:8081",  // Vite often picks 8081 when 8080 is busy
-                      "https://localhost:5001" // Your backend (just in case)
-                  ) 
+            // IMPORTANT: Replace the URL below with your actual Vercel Frontend URL
+            policy.WithOrigins("https://sereno-u1sb.onrender.com") 
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
-// -----------------------------
 
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Authentication setup (This part is correct)
+// Authentication setup
 var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
 var jwtIssuer = builder.Configuration["Authentication:SupabaseIssuer"];
 if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(jwtIssuer))
 {
     throw new InvalidOperationException("Auth secrets are not configured in appsettings.json");
 }
+
 var supabaseSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.MapInboundClaims = false; // Keep this line
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
@@ -56,13 +52,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
-// Swagger setup (This part is correct)
+// Swagger setup
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sereno API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { /* ... swagger details ... */ });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement { /* ... swagger details ... */ });
 });
 
 var app = builder.Build();
@@ -76,10 +70,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-// --- 2. ADD CORS MIDDLEWARE HERE ---
-// It MUST be after UseRouting() and BEFORE UseAuthentication()/UseAuthorization()
+// --- 2. APPLY CORS MIDDLEWARE ---
+// Must be after UseRouting() and before UseAuthentication()
 app.UseCors("AllowReactApp");
-// ----------------------------------
 
 app.UseAuthentication();
 app.UseAuthorization();

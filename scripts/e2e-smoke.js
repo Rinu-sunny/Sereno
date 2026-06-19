@@ -37,7 +37,7 @@ async function run() {
   }
 
   // Call backend GET
-  const backendBase = 'http://localhost:5000';
+  const backendBase = 'https://sereno-u1sb.onrender.com';
   try {
     console.log('Calling GET /api/UserSettings');
     const getRes = await fetch(`${backendBase}/api/UserSettings`, {
