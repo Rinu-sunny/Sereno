@@ -11,12 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 // --- 1. CORS CONFIGURATION ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowEverything", policy =>
     {
-        policy.WithOrigins(
-            "https://sereno-git-main-myhobby4.vercel.app",
-            "https://sereno-rho.vercel.app"
-        )
+        policy.AllowAnyOrigin ()
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials(); 
@@ -66,7 +63,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 // CORS must be before Authentication
-app.UseCors("AllowAll");
+app.UseCors("AllowEverything");
 
 app.UseAuthentication();
 app.UseAuthorization();
