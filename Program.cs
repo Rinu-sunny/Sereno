@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             // IMPORTANT: Replace the URL below with your actual Vercel Frontend URL
-            policy.WithOrigins("https://sereno-u1sb.onrender.com") 
+            policy.WithOrigins("https://sereno-git-main-myhobby4.vercel.app") 
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
