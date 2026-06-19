@@ -1,103 +1,25 @@
-/*using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Sereno.Data;
-using System.Text;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// --- 1. ADD CORS POLICY ---
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactApp",
-        policy =>
-        {
-            // IMPORTANT: Replace the URL below with your actual Vercel Frontend URL
-            policy.WithOrigins("https://sereno-rho.vercel.app","https://sereno-3puod8va3-myhobby4.vercel.app","https://sereno-git-main-myhobby4.vercel.app") 
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
-});
-
-// Add DbContext
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Authentication setup
-var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
-var jwtIssuer = builder.Configuration["Authentication:SupabaseIssuer"];
-if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(jwtIssuer))
-{
-    throw new InvalidOperationException("Auth secrets are not configured in appsettings.json");
-}
-
-var supabaseSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.MapInboundClaims = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = supabaseSecurityKey,
-            ValidateIssuer = true,
-            ValidIssuer = jwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = "authenticated",
-            ValidateLifetime = true
-        };
-    });
-
-builder.Services.AddAuthorization();
-builder.Services.AddControllers();
-
-// Swagger setup
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sereno API", Version = "v1" });
-});
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseRouting();
-
-// --- 2. APPLY CORS MIDDLEWARE ---
-// Must be after UseRouting() and before UseAuthentication()
-app.UseCors("AllowReactApp");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
-*/
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Sereno.Data;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. OPEN CORS POLICY ---
+// --- 1. CORS CONFIGURATION ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+            "https://sereno-git-main-myhobby4.vercel.app",
+            "https://sereno-rho.vercel.app"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials(); 
     });
 });
 
@@ -105,41 +27,36 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Authentication setup
-var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
-var jwtIssuer = builder.Configuration["Authentication:SupabaseIssuer"];
-if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(jwtIssuer))
-{
-    throw new InvalidOperationException("Auth secrets are not configured in appsettings.json");
-}
+// --- 2. ASYMMETRIC AUTHENTICATION ---
+var jwtIssuer = builder.Configuration["https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1"];
+var jwksUrl = $"{jwtIssuer}/.well-known/jwks.json";
 
-var supabaseSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = supabaseSecurityKey,
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
             ValidateAudience = true,
             ValidAudience = "authenticated",
             ValidateLifetime = true
         };
+
+        // Automatically fetch public keys from Supabase
+        options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+            jwksUrl,
+            new OpenIdConnectConfigurationRetriever());
     });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
-
-// Swagger setup
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- 3. PIPELINE ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -148,8 +65,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-// --- 2. APPLY CORS MIDDLEWARE ---
-// MUST be placed after UseRouting() and before Authentication
+// CORS must be before Authentication
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
@@ -158,3 +74,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
