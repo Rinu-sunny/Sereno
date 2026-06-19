@@ -166,7 +166,7 @@ const Auth = () => {
             data: { 
               full_name: name 
             },
-            emailRedirectTo: `${window.location.origin}/auth`
+            emailRedirectTo: `"https://sereno-git-main-myhobby4.vercel.app"/auth`, // Redirect back to auth page after email confirmation
           }
         });
          sessionData = data;
@@ -273,7 +273,7 @@ const Auth = () => {
         type: 'signup',
         email: targetEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+          emailRedirectTo: `"https://sereno-git-main-myhobby4.vercel.app"/auth`,
         },
       });
       if (error) throw error;

@@ -19,7 +19,7 @@ interface BackendTask {
   updatedAt?: string | null; // Or Date | null
 }
 
-const API_BASE_URL = 'https://sereno-u1sb.onrender.com/api'; // Your backend base URL (we'll fallback to http)
+const API_BASE_URL = 'https://localhost:5001/api'; // Your backend base URL (we'll fallback to http)
 const LOCAL_TASKS_KEY = 'sereno-local-tasks';
 
 // --- Function to get the JWT token ---
@@ -71,7 +71,7 @@ const fetchTasksApi = async (): Promise<BackendTask[]> => {
       return resp.data;
     } catch (err) {
       console.warn('HTTPS tasks fetch failed, trying HTTP', err);
-      const resp = await axios.get<BackendTask[]>(`${API_BASE_URL.replace('https://sereno-u1sb.onrender.com', 'https://sereno-u1sb.onrender.com')}/tasks`, { headers });
+      const resp = await axios.get<BackendTask[]>(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks`, { headers });
       console.log('Tasks fetched (HTTP):', resp.data);
       return resp.data;
     }
@@ -94,7 +94,7 @@ const addTaskApi = async (newTaskData: { title: string; targetPomodoros: number;
       return resp.data;
     } catch (err) {
       console.warn('HTTPS add task failed, trying HTTP', err);
-      const resp = await axios.post<BackendTask>(`${API_BASE_URL.replace('https://sereno-u1sb.onrender.com', 'https://sereno-u1sb.onrender.com')}/tasks`, newTaskData, { headers });
+      const resp = await axios.post<BackendTask>(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks`, newTaskData, { headers });
       console.log('Task added (HTTP):', resp.data);
       return resp.data;
     }
@@ -118,7 +118,7 @@ const updateTaskApi = async (id: string, updatedFields: BackendTask): Promise<Ba
       return resp.data;
     } catch (err) {
       console.warn('HTTPS update failed, trying HTTP', err);
-      const resp = await axios.put<BackendTask>(`${API_BASE_URL.replace('https://sereno-u1sb.onrender.com', 'https://sereno-u1sb.onrender.com')}/tasks/${id}`, updatedFields, { headers });
+      const resp = await axios.put<BackendTask>(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks/${id}`, updatedFields, { headers });
       console.log('Task updated (HTTP):', resp.data);
       return resp.data;
     }
@@ -139,7 +139,7 @@ const deleteTaskApi = async (id: string): Promise<void> => {
       console.log(`Task ${id} deleted (HTTPS).`);
     } catch (err) {
       console.warn('HTTPS delete failed, trying HTTP', err);
-      await axios.delete(`${API_BASE_URL.replace('https://sereno-u1sb.onrender.com', 'https://sereno-u1sb.onrender.com')}/tasks/${id}`, { headers });
+      await axios.delete(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks/${id}`, { headers });
       console.log(`Task ${id} deleted (HTTP).`);
     }
   } catch (err) {
@@ -157,7 +157,7 @@ const reorderTasksApi = async (orderedIds: string[]): Promise<void> => {
       await axios.put(`${API_BASE_URL}/tasks/reorder`, orderedIds, { headers });
     } catch (err) {
       console.warn('HTTPS reorder failed, trying HTTP', err);
-      await axios.put(`${API_BASE_URL.replace('https://sereno-u1sb.onrender.com', 'https://sereno-u1sb.onrender.com')}/tasks/reorder`, orderedIds, { headers });
+      await axios.put(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks/reorder`, orderedIds, { headers });
     }
   } catch (err) {
     console.error('Failed to reorder tasks:', err);
