@@ -296,10 +296,11 @@ const Settings = () => {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="pomodoro-length" className="block text-sm font-medium text-foreground mb-2">
                 Pomodoro Length (minutes)
               </label>
               <input
+                id="pomodoro-length"
                 type="number"
                 value={pomodoroLength}
                 onChange={(e) => {
@@ -314,10 +315,11 @@ const Settings = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="short-break-length" className="block text-sm font-medium text-foreground mb-2">
                 Short Break Length (minutes)
               </label>
               <input
+               id="short-break-length"
                 type="number"
                 value={shortBreakLength}
                 onChange={(e) => {
@@ -332,10 +334,11 @@ const Settings = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="long-break-length" className="block text-sm font-medium text-foreground mb-2">
                 Long Break Length (minutes)
               </label>
               <input
+                id="long-break-length"
                 type="number"
                 value={longBreakLength}
                 onChange={(e) => {
@@ -365,6 +368,7 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">Get notified when timer ends</p>
               </div>
               <button
+                aria-label="Toggle Notifications"
                 onClick={() => {
                   hasUserEditedRef.current = true;
                   setNotifications(!notifications);
@@ -391,6 +395,7 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">Play sound when timer completes</p>
               </div>
               <button
+                aria-label="Toggle Sound Alerts"
                 onClick={() => {
                   hasUserEditedRef.current = true;
                   setSound(!sound);
