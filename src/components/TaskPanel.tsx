@@ -19,7 +19,7 @@ interface BackendTask {
   updatedAt?: string | null; // Or Date | null
 }
 
-const API_BASE_URL = 'https://localhost:5001/api'; // Your backend base URL (we'll fallback to http)
+const API_BASE_URL = import.meta.env.VITE_API_URL ||'https://sereno-u1sb.onrender.com/api'; // Your backend base URL (we'll fallback to http)
 const LOCAL_TASKS_KEY = 'sereno-local-tasks';
 
 // --- Function to get the JWT token ---
@@ -69,12 +69,10 @@ const fetchTasksApi = async (): Promise<BackendTask[]> => {
       const resp = await axios.get<BackendTask[]>(`${API_BASE_URL}/tasks`, { headers });
       console.log('Tasks fetched (HTTPS):', resp.data);
       return resp.data;
-    } catch (err) {
-      console.warn('HTTPS tasks fetch failed, trying HTTP', err);
-      const resp = await axios.get<BackendTask[]>(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks`, { headers });
-      console.log('Tasks fetched (HTTP):', resp.data);
-      return resp.data;
-    }
+    } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
   } catch (err) {
     console.error('Failed to fetch tasks API:', err);
     throw err;
@@ -92,12 +90,10 @@ const addTaskApi = async (newTaskData: { title: string; targetPomodoros: number;
       const resp = await axios.post<BackendTask>(`${API_BASE_URL}/tasks`, newTaskData, { headers });
       console.log('Task added (HTTPS):', resp.data);
       return resp.data;
-    } catch (err) {
-      console.warn('HTTPS add task failed, trying HTTP', err);
-      const resp = await axios.post<BackendTask>(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks`, newTaskData, { headers });
-      console.log('Task added (HTTP):', resp.data);
-      return resp.data;
-    }
+    } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
   } catch (err) {
     console.error('Failed to add task:', err);
     throw err;
@@ -116,12 +112,10 @@ const updateTaskApi = async (id: string, updatedFields: BackendTask): Promise<Ba
       const resp = await axios.put<BackendTask>(`${API_BASE_URL}/tasks/${id}`, updatedFields, { headers });
       console.log('Task updated (HTTPS):', resp.data);
       return resp.data;
-    } catch (err) {
-      console.warn('HTTPS update failed, trying HTTP', err);
-      const resp = await axios.put<BackendTask>(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks/${id}`, updatedFields, { headers });
-      console.log('Task updated (HTTP):', resp.data);
-      return resp.data;
-    }
+    } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
   } catch (err) {
     console.error('Failed to update task:', err);
     throw err;
@@ -137,11 +131,10 @@ const deleteTaskApi = async (id: string): Promise<void> => {
     try {
       await axios.delete(`${API_BASE_URL}/tasks/${id}`, { headers });
       console.log(`Task ${id} deleted (HTTPS).`);
-    } catch (err) {
-      console.warn('HTTPS delete failed, trying HTTP', err);
-      await axios.delete(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks/${id}`, { headers });
-      console.log(`Task ${id} deleted (HTTP).`);
-    }
+    } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
   } catch (err) {
     console.error('Failed to delete task:', err);
     throw err;
@@ -155,10 +148,10 @@ const reorderTasksApi = async (orderedIds: string[]): Promise<void> => {
   try {
     try {
       await axios.put(`${API_BASE_URL}/tasks/reorder`, orderedIds, { headers });
-    } catch (err) {
-      console.warn('HTTPS reorder failed, trying HTTP', err);
-      await axios.put(`${API_BASE_URL.replace('https://localhost:5001', 'http://localhost:5000')}/tasks/reorder`, orderedIds, { headers });
-    }
+    } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
   } catch (err) {
     console.error('Failed to reorder tasks:', err);
     throw err;

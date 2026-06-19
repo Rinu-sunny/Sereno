@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext'; // Assuming you use this contex
 import axios from 'axios'; // Import axios
 
 // --- API and Auth Configuration ---
-const API_BASE_URL = 'https://sereno-u1sb.onrender.com/api/pomodorosession'; // Pomodoro base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL ||'https://sereno-u1sb.onrender.com/api/pomodorosession'; // Pomodoro base URL
 
 // Function to get the JWT token (adjust based on your auth state management)
 const getToken = (): string | null => {

@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from "@/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
-const API_BASE_URL = "https://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL ||"https://sereno-u1sb.onrender.com/api";
 const TIMER_STATE_KEY = "sereno-timer-state-v1";
 
 interface TimerTask {
@@ -143,11 +143,10 @@ const Timer = () => {
       try {
         const resp = await axios.post(`${API_BASE_URL}/PomodoroSession/start?${params.toString()}`, null, { headers });
         return resp.data?.id ?? null;
-      } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
-        const resp = await axios.post(`${httpBase}/PomodoroSession/start?${params.toString()}`, null, { headers });
-        return resp.data?.id ?? null;
-      }
+      } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
     } catch (err) {
       console.warn("Failed to start backend session", err);
       return null;
@@ -161,10 +160,10 @@ const Timer = () => {
     try {
       try {
         await axios.post(`${API_BASE_URL}/PomodoroSession/complete/${id}`, null, { headers });
-      } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
-        await axios.post(`${httpBase}/PomodoroSession/complete/${id}`, null, { headers });
-      }
+      } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
     } catch (err) {
       console.warn("Failed to complete backend session", err);
     }
@@ -178,11 +177,10 @@ const Timer = () => {
       try {
         const resp = await axios.get<TimerTask[]>(`${API_BASE_URL}/tasks`, { headers });
         return resp.data;
-      } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
-        const resp = await axios.get<TimerTask[]>(`${httpBase}/tasks`, { headers });
-        return resp.data;
-      }
+      } catch (error) {
+    console.error("Failed to fetch tasks:", error);
+    throw error; // Let the UI handle the error (show a message, etc.)
+}
     } catch (err) {
       console.warn("Failed to fetch tasks for collective progress", err);
       return [];
@@ -196,9 +194,8 @@ const Timer = () => {
     try {
       try {
         await axios.put(`${API_BASE_URL}/tasks/${task.id}`, task, { headers });
-      } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
-        await axios.put(`${httpBase}/tasks/${task.id}`, task, { headers });
+      } catch (err) {
+        console.error(`Failed to update task ${task.id} with primary API endpoint, trying fallback`, err);
       }
     } catch (err) {
       console.warn(`Failed to update task ${task.id} during collective progress`, err);
@@ -240,9 +237,8 @@ const Timer = () => {
     try {
       try {
         await axios.post(`${API_BASE_URL}/PomodoroSession/skip/${id}`, null, { headers });
-      } catch {
-        const httpBase = API_BASE_URL.replace("https://localhost:5001", "http://localhost:5000");
-        await axios.post(`${httpBase}/PomodoroSession/skip/${id}`, null, { headers });
+      } catch (err){
+        console.warn("Failed to skip session with primary API endpoint, trying fallback", err);
       }
     } catch (err) {
       console.warn("Failed to skip backend session", err);
