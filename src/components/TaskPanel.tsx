@@ -19,7 +19,7 @@ interface BackendTask {
   updatedAt?: string | null; // Or Date | null
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ||'https://sereno-u1sb.onrender.com/api'; // Your backend base URL (we'll fallback to http)
+const API_BASE_URL = 'https://sereno-u1sb.onrender.com/api'; // Your backend base URL (we'll fallback to http)
 const LOCAL_TASKS_KEY = 'sereno-local-tasks';
 
 // --- Function to get the JWT token ---

@@ -26,7 +26,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // --- 2. ASYMMETRIC AUTHENTICATION ---
-var jwtIssuer = builder.Configuration["https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1"];
+var jwtIssuer = "https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1";
 var jwksUrl = $"{jwtIssuer}/.well-known/jwks.json";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

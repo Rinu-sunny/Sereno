@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from "@/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ||"https://sereno-u1sb.onrender.com/api";
+const API_BASE_URL = "https://sereno-u1sb.onrender.com/api";
 const TIMER_STATE_KEY = "sereno-timer-state-v1";
 
 interface TimerTask {
