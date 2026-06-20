@@ -62,7 +62,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"REQUEST HIT: {context.Request.Method} {context.Request.Path} | Origin: {context.Request.Headers["Origin"]}");
+    await next();
+});
 // CORS must be before Authentication
 app.UseCors("AllowFrontend");
 
