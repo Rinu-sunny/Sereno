@@ -1,73 +1,60 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Sereno.Data;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. ADD CORS POLICY HERE ---
+// --- 1. CORS CONFIGURATION ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
-        policy =>
-        {
-            // Make sure this URL matches your frontend (check Terminal 2)
-            policy.WithOrigins(
-                      "https://sereno-u1sb.onrender.com",  // Your frontend
-                      "https://sereno-u1sb.onrender.com",  // Vite often picks 8081 when 8080 is busy
-                      "https://sereno-u1sb.onrender.com" // Your backend (just in case)
-                  ) 
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("https://sereno-rho.vercel.app",
+                "http://localhost:5001")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
-// -----------------------------
 
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Authentication setup (This part is correct)
-var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
-var jwtIssuer = builder.Configuration["Authentication:SupabaseIssuer"];
-if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(jwtIssuer))
-{
-    throw new InvalidOperationException("Auth secrets are not configured in appsettings.json");
-}
-var supabaseSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+// --- 2. ASYMMETRIC AUTHENTICATION ---
+var jwtIssuer = builder.Configuration["https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1"];
+var jwksUrl = $"{jwtIssuer}/.well-known/jwks.json";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.MapInboundClaims = false; // Keep this line
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = supabaseSecurityKey,
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
             ValidateAudience = true,
             ValidAudience = "authenticated",
             ValidateLifetime = true
         };
+
+        // Automatically fetch public keys from Supabase
+        options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+            jwksUrl,
+            new OpenIdConnectConfigurationRetriever());
     });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
-
-// Swagger setup (This part is correct)
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sereno API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { /* ... swagger details ... */ });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement { /* ... swagger details ... */ });
-});
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- 3. PIPELINE ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -75,15 +62,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
-// --- 2. ADD CORS MIDDLEWARE HERE ---
-// It MUST be after UseRouting() and BEFORE UseAuthentication()/UseAuthorization()
-app.UseCors("AllowReactApp");
-// ----------------------------------
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"REQUEST HIT: {context.Request.Method} {context.Request.Path} | Origin: {context.Request.Headers["Origin"]}");
+    await next();
+});
+// CORS must be before Authentication
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapGet("/cors-test", () => "ok").RequireCors("AllowFrontend");
 app.MapControllers();
 
 app.Run();
+
