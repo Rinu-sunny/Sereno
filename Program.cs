@@ -68,7 +68,7 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapGet("/cors-test", () => "ok").RequireCors("AllowFrontend");
 app.MapControllers();
 
 app.Run();
