@@ -11,12 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 // --- 1. CORS CONFIGURATION ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowEverything", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin ()
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials(); 
+        policy.WithOrigins("https://sereno-rho.vercel.app",
+                "http://localhost:5001")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -63,7 +64,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 // CORS must be before Authentication
-app.UseCors("AllowEverything");
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
