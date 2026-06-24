@@ -235,7 +235,7 @@ const Settings = () => {
   if (!authChecked) return <SettingsSkeleton />;
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col pt-16 pb-6 px-4">
+    <div className="h-screen overflow-hidden flex flex-col pt-20 pb-6 px-4">
       <div className="max-w-3xl mx-auto w-full flex flex-col gap-5 h-full">
 
         {/* Header */}
