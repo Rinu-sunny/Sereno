@@ -3,48 +3,48 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Sereno.Data;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
-var jwtIssuer = "https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1";
 // --- 1. CORS CONFIGURATION ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://sereno-rho.vercel.app",
-                "http://localhost:5001")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        policy.SetIsOriginAllowed(origin =>
+                origin.EndsWith(".vercel.app") ||
+                origin == "http://localhost:5173" ||
+                origin == "http://localhost:5001")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
-// Add DbContext
+// --- 2. DATABASE ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// --- 2. ASYMMETRIC AUTHENTICATION ---
+// --- 3. JWT AUTHENTICATION (Supabase HS256 symmetric key) ---
+var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
 var jwtIssuer = "https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1";
-var jwksUrl = $"{jwtIssuer}/.well-known/jwks.json";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSecret!)),
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
             ValidateAudience = true,
             ValidAudience = "authenticated",
             ValidateLifetime = true
         };
-
-        // Automatically fetch public keys from Supabase
-        options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-            jwksUrl,
-            new OpenIdConnectConfigurationRetriever());
     });
 
 builder.Services.AddAuthorization();
@@ -54,7 +54,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- 3. PIPELINE ---
+// --- 4. PIPELINE ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -62,18 +62,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+
 app.Use(async (context, next) =>
 {
     Console.WriteLine($"REQUEST HIT: {context.Request.Method} {context.Request.Path} | Origin: {context.Request.Headers["Origin"]}");
     await next();
 });
-// CORS must be before Authentication
-app.UseCors("AllowFrontend");
 
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapGet("/cors-test", () => "ok").RequireCors("AllowFrontend");
 app.MapControllers();
 
 app.Run();
-
