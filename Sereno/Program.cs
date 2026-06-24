@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Sereno.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var jwtSecret = builder.Configuration["Authentication:SupabaseJwtSecret"];
+var jwtIssuer = "https://ehdwihmbalkflpvqtvcy.supabase.co/auth/v1";
 // --- 1. CORS CONFIGURATION ---
 builder.Services.AddCors(options =>
 {
