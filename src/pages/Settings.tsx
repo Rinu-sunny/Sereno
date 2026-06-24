@@ -249,72 +249,81 @@ const Settings = () => {
   const disabled = isSaving || isLoadingSettings;
 
   return (
-    <div className="h-screen flex flex-col pt-16 px-4 overflow-hidden">
-      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full py-6 gap-4 min-h-0">
+    <div className="h-screen flex flex-col pt-16 px-6 overflow-hidden">
+      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full py-8 gap-6 min-h-0">
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground">Customize your Pomodoro experience</p>
+          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+          <p className="text-sm text-muted-foreground mt-1">Customize your Pomodoro experience</p>
         </div>
 
-        {/* Timer durations */}
-        <div className="glass-panel rounded-2xl p-4 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Timer Durations</h2>
-          </div>
-          <Stepper
-            id="pomodoro-length" label="Focus" min={1} max={60}
-            value={pomodoroLength} disabled={disabled}
-            onChange={(v) => { hasUserEditedRef.current = true; setPomodoroLength(v); }}
-          />
-          <div className="border-t border-white/10" />
-          <Stepper
-            id="short-break-length" label="Short break" min={1} max={30}
-            value={shortBreakLength} disabled={disabled}
-            onChange={(v) => { hasUserEditedRef.current = true; setShortBreakLength(v); }}
-          />
-          <div className="border-t border-white/10" />
-          <Stepper
-            id="long-break-length" label="Long break" min={1} max={60}
-            value={longBreakLength} disabled={disabled}
-            onChange={(v) => { hasUserEditedRef.current = true; setLongBreakLength(v); }}
-          />
-        </div>
+        {/* Two-column card row */}
+        <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
 
-        {/* Notifications */}
-        <div className="glass-panel rounded-2xl p-4 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Bell className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Alerts</h2>
+          {/* Timer durations */}
+          <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Timer Durations</h2>
+            </div>
+            <div className="flex flex-col gap-4 flex-1 justify-around">
+              <Stepper
+                id="pomodoro-length" label="Focus" min={1} max={60}
+                value={pomodoroLength} disabled={disabled}
+                onChange={(v) => { hasUserEditedRef.current = true; setPomodoroLength(v); }}
+              />
+              <div className="border-t border-white/10" />
+              <Stepper
+                id="short-break-length" label="Short break" min={1} max={30}
+                value={shortBreakLength} disabled={disabled}
+                onChange={(v) => { hasUserEditedRef.current = true; setShortBreakLength(v); }}
+              />
+              <div className="border-t border-white/10" />
+              <Stepper
+                id="long-break-length" label="Long break" min={1} max={60}
+                value={longBreakLength} disabled={disabled}
+                onChange={(v) => { hasUserEditedRef.current = true; setLongBreakLength(v); }}
+              />
+            </div>
           </div>
-          <ToggleRow
-            label="Notifications" description="Alert when the timer ends"
-            icon={<Bell className="w-4 h-4" />}
-            enabled={notifications} disabled={disabled}
-            onToggle={() => { hasUserEditedRef.current = true; setNotifications(n => !n); }}
-          />
-          <div className="border-t border-white/10" />
-          <ToggleRow
-            label="Sound" description="Play a sound on completion"
-            icon={<Volume2 className="w-4 h-4" />}
-            enabled={sound} disabled={disabled}
-            onToggle={() => { hasUserEditedRef.current = true; setSound(s => !s); }}
-          />
+
+          {/* Alerts */}
+          <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-primary" />
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Alerts</h2>
+            </div>
+            <div className="flex flex-col gap-4 flex-1 justify-around">
+              <ToggleRow
+                label="Notifications" description="Alert when the timer ends"
+                icon={<Bell className="w-4 h-4" />}
+                enabled={notifications} disabled={disabled}
+                onToggle={() => { hasUserEditedRef.current = true; setNotifications(n => !n); }}
+              />
+              <div className="border-t border-white/10" />
+              <ToggleRow
+                label="Sound" description="Play a sound on completion"
+                icon={<Volume2 className="w-4 h-4" />}
+                enabled={sound} disabled={disabled}
+                onToggle={() => { hasUserEditedRef.current = true; setSound(s => !s); }}
+              />
+            </div>
+          </div>
+
         </div>
 
         {/* Save */}
         <button
           onClick={handleSave}
           disabled={disabled}
-          className={`w-full py-3 rounded-xl transition-all flex items-center justify-center gap-2 font-semibold text-sm ${
+          className={`w-full py-3 rounded-xl transition-all flex items-center justify-center gap-2 font-semibold ${
             disabled
               ? "bg-white/10 text-muted-foreground cursor-wait"
               : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl"
           }`}
         >
-          <Save className="w-4 h-4" />
+          <Save className="w-5 h-5" />
           {isLoadingSettings ? "Loading…" : isSaving ? "Saving…" : "Save changes"}
         </button>
 
