@@ -235,23 +235,25 @@ const Settings = () => {
   if (!authChecked) return <SettingsSkeleton />;
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col pt-20 pb-8 px-4">
+    <div className="h-screen overflow-hidden flex flex-col pt-20 pb-2 px-4">
       <div className="max-w-3xl mx-auto w-full flex flex-col gap-5 h-full">
 
         {/* Header */}
         <div className="space-y-1 shrink-0">
-          <h1 className="text-4xl font-bold text-foreground">Settings</h1>
+          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
           <p className="text-muted-foreground">Customize your Pomodoro experience</p>
         </div>
 
         {/* Timer Settings */}
-        <div className="glass-panel rounded-2xl p-5 space-y-4 shrink-0">
+        
+        <div className="glass-panel rounded-xl p-5 space-y-2 shrink-0">
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">Timer Duration</h2>
+            <h2 className="text-md font-bold text-foreground">Timer Duration</h2>
           </div>
+          
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
               <label htmlFor="pomodoro-length" className="block text-sm font-medium text-foreground mb-1">
                 Pomodoro Length (minutes)
@@ -303,7 +305,7 @@ const Settings = () => {
         <div className="glass-panel rounded-2xl p-5 space-y-4 shrink-0">
           <div className="flex items-center gap-3">
             <Bell className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
+            <h2 className="text-md font-bold text-foreground">Notifications</h2>
           </div>
 
           <div className="space-y-3">
@@ -346,7 +348,7 @@ const Settings = () => {
         <button
           onClick={handleSave}
           disabled={isSaving || isLoadingSettings}
-          className={`w-full py-4 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 font-semibold shrink-0 ${
+          className={`w-full py-2 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 font-semibold shrink-0 ${
             (isSaving || isLoadingSettings)
               ? "bg-white/10 text-muted-foreground cursor-wait"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
