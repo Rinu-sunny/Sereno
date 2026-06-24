@@ -23,8 +23,7 @@ const readCachedSettings = (): CachedSettings | null => {
   try {
     const raw = localStorage.getItem(LOCAL_SETTINGS_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as CachedSettings;
-    return parsed;
+    return JSON.parse(raw) as CachedSettings;
   } catch {
     return null;
   }
@@ -35,18 +34,105 @@ const getToken = async (): Promise<string | null> => {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token ?? null;
     if (token) return token;
-
     const sessionKey = Object.keys(localStorage).find(
       (key) => key.startsWith("sb-") && key.endsWith("-auth-token")
     );
     if (!sessionKey) return null;
-
     const sessionData = JSON.parse(localStorage.getItem(sessionKey) || "{}");
     return sessionData?.access_token || null;
   } catch {
     return null;
   }
 };
+
+const toErrorText = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const maybe = value as { error?: unknown; message?: unknown; title?: unknown };
+    if (typeof maybe.error === "string") return maybe.error;
+    if (typeof maybe.message === "string") return maybe.message;
+    if (typeof maybe.title === "string") return maybe.title;
+    try { return JSON.stringify(value); } catch { return "Unexpected error"; }
+  }
+  return "Unexpected error";
+};
+
+// Compact number stepper component
+const Stepper = ({
+  id, label, value, min, max, disabled, onChange,
+}: {
+  id: string; label: string; value: number; min: number; max: number;
+  disabled: boolean; onChange: (v: number) => void;
+}) => (
+  <div className="flex items-center justify-between gap-4">
+    <label htmlFor={id} className="text-sm font-medium text-foreground flex-1 leading-tight">
+      {label}
+    </label>
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        aria-label={`Decrease ${label}`}
+        onClick={() => onChange(Math.max(min, value - 1))}
+        disabled={disabled || value <= min}
+        className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 disabled:opacity-30 text-foreground font-bold text-lg leading-none transition-colors flex items-center justify-center"
+      >
+        −
+      </button>
+      <input
+        id={id}
+        type="number"
+        value={value}
+        onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value))))}
+        className="w-12 text-center bg-white/5 border border-white/20 rounded-md text-foreground text-sm py-1 focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        min={min}
+        max={max}
+        disabled={disabled}
+      />
+      <button
+        type="button"
+        aria-label={`Increase ${label}`}
+        onClick={() => onChange(Math.min(max, value + 1))}
+        disabled={disabled || value >= max}
+        className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 disabled:opacity-30 text-foreground font-bold text-lg leading-none transition-colors flex items-center justify-center"
+      >
+        +
+      </button>
+    </div>
+  </div>
+);
+
+// Toggle row component
+const ToggleRow = ({
+  label, description, icon, enabled, disabled, onToggle,
+}: {
+  label: string; description: string; icon: React.ReactNode;
+  enabled: boolean; disabled: boolean; onToggle: () => void;
+}) => (
+  <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center gap-2 flex-1 min-w-0">
+      <span className="text-muted-foreground shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground leading-tight">{label}</p>
+        <p className="text-xs text-muted-foreground leading-tight">{description}</p>
+      </div>
+    </div>
+    <button
+      type="button"
+      aria-label={`Toggle ${label}`}
+      onClick={onToggle}
+      disabled={disabled}
+      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-40 ${
+        enabled ? "bg-primary" : "bg-white/20"
+      }`}
+    >
+      <div
+        className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+          enabled ? "translate-x-5" : ""
+        }`}
+      />
+    </button>
+  </div>
+);
 
 const Settings = () => {
   const { toast } = useToast();
@@ -64,213 +150,95 @@ const Settings = () => {
   const { applyLocal, refresh } = useSettings();
 
   const saveLocalSettings = (payload: {
-    workDuration: number;
-    shortBreakDuration: number;
-    longBreakDuration: number;
-    notificationsEnabled: boolean;
-    alarmSound: string;
+    workDuration: number; shortBreakDuration: number; longBreakDuration: number;
+    notificationsEnabled: boolean; alarmSound: string;
   }) => {
-    try {
-      localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(payload));
-    } catch {
-      // ignore storage errors
-    }
-  };
-
-  const loadLocalSettings = () => {
-    return readCachedSettings();
-  };
-
-  const toErrorText = (value: unknown): string => {
-    if (typeof value === "string") return value;
-    if (value && typeof value === "object") {
-      const maybe = value as { error?: unknown; message?: unknown; title?: unknown };
-      if (typeof maybe.error === "string") return maybe.error;
-      if (typeof maybe.message === "string") return maybe.message;
-      if (typeof maybe.title === "string") return maybe.title;
-      try {
-        return JSON.stringify(value);
-      } catch {
-        return "Unexpected error";
-      }
-    }
-    return "Unexpected error";
+    try { localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(payload)); } catch { }
   };
 
   useEffect(() => {
     let mounted = true;
-
     async function loadSettings() {
-      const hasCached = !!loadLocalSettings();
+      const hasCached = !!readCachedSettings();
       if (!hasCached) setIsLoadingSettings(true);
       try {
-        // Only attempt to load if authenticated
         if (!authChecked) return;
-        if (!isAuthenticated) {
-          navigate("/auth", { replace: true });
-          return;
-        }
-
+        if (!isAuthenticated) { navigate("/auth", { replace: true }); return; }
         const token = await getToken();
         if (!token) return;
-
-        // Try HTTPS first, then fallback to HTTP to avoid dev-cert issues
-        const httpsUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
-        const httpUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
-        let resp;
-        try {
-          resp = await axios.get(httpsUrl, { headers: { Authorization: `Bearer ${token}` } });
-        } catch (e) {
-          // fallback to http
-          resp = await axios.get(httpUrl, { headers: { Authorization: `Bearer ${token}` } });
-        }
-
-        if (!mounted) return;
-        if (hasUserEditedRef.current) return;
-
+        const url = `https://sereno-u1sb.onrender.com/api/UserSettings`;
+        const resp = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!mounted || hasUserEditedRef.current) return;
         const s = resp.data;
-        // Map backend fields to local state where possible
         if (typeof s.workDuration === "number") setPomodoroLength(s.workDuration);
         if (typeof s.shortBreakDuration === "number") setShortBreakLength(s.shortBreakDuration);
         if (typeof s.longBreakDuration === "number") setLongBreakLength(s.longBreakDuration);
         if (typeof s.notificationsEnabled === "boolean") setNotifications(s.notificationsEnabled);
         if (typeof s.alarmSound === "string") setSound(s.alarmSound !== "muted");
-
-        // Update context so Timer picks up new values
         applyLocal({
-          workDuration: typeof s.workDuration === "number" ? s.workDuration : undefined,
-          shortBreakDuration: typeof s.shortBreakDuration === "number" ? s.shortBreakDuration : undefined,
-          longBreakDuration: typeof s.longBreakDuration === "number" ? s.longBreakDuration : undefined,
-          notificationsEnabled: typeof s.notificationsEnabled === "boolean" ? s.notificationsEnabled : undefined,
-          alarmSound: typeof s.alarmSound === "string" ? s.alarmSound : undefined,
+          workDuration: s.workDuration, shortBreakDuration: s.shortBreakDuration,
+          longBreakDuration: s.longBreakDuration, notificationsEnabled: s.notificationsEnabled,
+          alarmSound: s.alarmSound,
         });
-
         saveLocalSettings({
-          workDuration: typeof s.workDuration === "number" ? s.workDuration : pomodoroLength,
-          shortBreakDuration: typeof s.shortBreakDuration === "number" ? s.shortBreakDuration : shortBreakLength,
-          longBreakDuration: typeof s.longBreakDuration === "number" ? s.longBreakDuration : longBreakLength,
-          notificationsEnabled: typeof s.notificationsEnabled === "boolean" ? s.notificationsEnabled : notifications,
-          alarmSound: typeof s.alarmSound === "string" ? s.alarmSound : (sound ? "default" : "muted"),
+          workDuration: s.workDuration ?? pomodoroLength,
+          shortBreakDuration: s.shortBreakDuration ?? shortBreakLength,
+          longBreakDuration: s.longBreakDuration ?? longBreakLength,
+          notificationsEnabled: s.notificationsEnabled ?? notifications,
+          alarmSound: s.alarmSound ?? (sound ? "default" : "muted"),
         });
-
       } catch (err) {
         if (!mounted) return;
-        // If 404 — no settings yet, keep defaults. If 401 — redirect to auth.
-        if (axios.isAxiosError(err)) {
-          if (err.response?.status === 401) navigate("/auth", { replace: true });
-        }
-
-        const local = loadLocalSettings();
+        if (axios.isAxiosError(err) && err.response?.status === 401) navigate("/auth", { replace: true });
+        const local = readCachedSettings();
         if (local && !hasUserEditedRef.current) {
           if (typeof local.workDuration === "number") setPomodoroLength(local.workDuration);
           if (typeof local.shortBreakDuration === "number") setShortBreakLength(local.shortBreakDuration);
           if (typeof local.longBreakDuration === "number") setLongBreakLength(local.longBreakDuration);
           if (typeof local.notificationsEnabled === "boolean") setNotifications(local.notificationsEnabled);
           if (typeof local.alarmSound === "string") setSound(local.alarmSound !== "muted");
-
-          applyLocal({
-            workDuration: typeof local.workDuration === "number" ? local.workDuration : undefined,
-            shortBreakDuration: typeof local.shortBreakDuration === "number" ? local.shortBreakDuration : undefined,
-            longBreakDuration: typeof local.longBreakDuration === "number" ? local.longBreakDuration : undefined,
-            notificationsEnabled: typeof local.notificationsEnabled === "boolean" ? local.notificationsEnabled : undefined,
-            alarmSound: typeof local.alarmSound === "string" ? local.alarmSound : undefined,
-          });
+          applyLocal(local);
         }
       } finally {
         if (mounted) setIsLoadingSettings(false);
       }
     }
-
     loadSettings();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [navigate, authChecked, isAuthenticated, applyLocal]);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const token = await getToken();
-
       if (!token) {
-        toast({
-          title: "Not authenticated",
-          description: "Please sign in before saving settings.",
-          variant: "destructive",
-        });
-        setIsSaving(false);
+        toast({ title: "Not authenticated", description: "Please sign in before saving.", variant: "destructive" });
         return;
       }
-
-      // Build payload matching backend UserSetting DTO
       const payload = {
-        workDuration: pomodoroLength,
-        shortBreakDuration: shortBreakLength,
-        longBreakDuration: longBreakLength,
-        pomodorosBeforeLongBreak: 4,
-        theme: "light",
-        alarmSound: sound ? "default" : "muted",
+        workDuration: pomodoroLength, shortBreakDuration: shortBreakLength,
+        longBreakDuration: longBreakLength, pomodorosBeforeLongBreak: 4,
+        theme: "light", alarmSound: sound ? "default" : "muted",
         notificationsEnabled: notifications,
       };
-
       saveLocalSettings(payload);
-
-      // Try HTTPS first then HTTP fallback (local dev cert may be untrusted)
-      const httpsUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
-      const httpUrl = `https://sereno-u1sb.onrender.com/api/UserSettings`;
-
       let persistedToBackend = true;
       try {
-        await axios.put(httpsUrl, payload, {
+        await axios.put(`https://sereno-u1sb.onrender.com/api/UserSettings`, payload, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         });
-      } catch {
-        try {
-          await axios.put(httpUrl, payload, {
-            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          });
-        } catch {
-          persistedToBackend = false;
-        }
-      }
-
-      // Update context immediately and try refreshing from backend
-      applyLocal({
-        workDuration: payload.workDuration,
-        shortBreakDuration: payload.shortBreakDuration,
-        longBreakDuration: payload.longBreakDuration,
-        notificationsEnabled: payload.notificationsEnabled,
-        alarmSound: payload.alarmSound,
-      });
-
-      // Refresh from backend only when persistence succeeds, to avoid snapping values back.
-      if (persistedToBackend) {
-        try { await refresh(); } catch { /* ignore refresh errors */ }
-      }
-
+      } catch { persistedToBackend = false; }
+      applyLocal(payload);
+      if (persistedToBackend) { try { await refresh(); } catch { } }
       toast({
-        title: persistedToBackend ? "Settings Saved" : "Settings Saved Locally",
-        description: persistedToBackend
-          ? "Your preferences have been updated."
-          : "Backend is unavailable (500). Your settings are applied locally for this session.",
+        title: persistedToBackend ? "Settings saved" : "Saved locally",
+        description: persistedToBackend ? "Your preferences have been updated." : "Backend unavailable — applied for this session.",
       });
     } catch (err: unknown) {
-      console.error("Error saving settings:", err);
       let message = "Could not save settings.";
-      if (axios.isAxiosError(err)) {
-        message = toErrorText(err.response?.data) || err.message || message;
-      } else if (err instanceof Error) {
-        message = err.message;
-      } else {
-        message = toErrorText(err);
-      }
-
-      toast({
-        title: "Save Failed",
-        description: message,
-        variant: "destructive",
-      });
+      if (axios.isAxiosError(err)) message = toErrorText(err.response?.data) || err.message || message;
+      else if (err instanceof Error) message = err.message;
+      toast({ title: "Save failed", description: message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -278,155 +246,79 @@ const Settings = () => {
 
   if (!authChecked) return <SettingsSkeleton />;
 
+  const disabled = isSaving || isLoadingSettings;
+
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <div className="h-screen flex flex-col pt-16 px-4 overflow-hidden">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full py-6 gap-4 min-h-0">
+
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Customize your Pomodoro experience</p>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+          <p className="text-sm text-muted-foreground">Customize your Pomodoro experience</p>
         </div>
 
-        {/* Timer Settings */}
-        <div className="glass-panel rounded-2xl p-6 space-y-6">
-          <div className="flex items-center gap-3">
-            <Clock className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">Timer Duration</h2>
+        {/* Timer durations */}
+        <div className="glass-panel rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Timer Durations</h2>
           </div>
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="pomodoro-length" className="block text-sm font-medium text-foreground mb-2">
-                Pomodoro Length (minutes)
-              </label>
-              <input
-                id="pomodoro-length"
-                type="number"
-                value={pomodoroLength}
-                onChange={(e) => {
-                  hasUserEditedRef.current = true;
-                  setPomodoroLength(Number(e.target.value));
-                }}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                min="1"
-                max="60"
-                disabled={isSaving || isLoadingSettings}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="short-break-length" className="block text-sm font-medium text-foreground mb-2">
-                Short Break Length (minutes)
-              </label>
-              <input
-               id="short-break-length"
-                type="number"
-                value={shortBreakLength}
-                onChange={(e) => {
-                  hasUserEditedRef.current = true;
-                  setShortBreakLength(Number(e.target.value));
-                }}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                min="1"
-                max="30"
-                disabled={isSaving || isLoadingSettings}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="long-break-length" className="block text-sm font-medium text-foreground mb-2">
-                Long Break Length (minutes)
-              </label>
-              <input
-                id="long-break-length"
-                type="number"
-                value={longBreakLength}
-                onChange={(e) => {
-                  hasUserEditedRef.current = true;
-                  setLongBreakLength(Number(e.target.value));
-                }}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                min="1"
-                max="60"
-                disabled={isSaving || isLoadingSettings}
-              />
-            </div>
-          </div>
+          <Stepper
+            id="pomodoro-length" label="Focus" min={1} max={60}
+            value={pomodoroLength} disabled={disabled}
+            onChange={(v) => { hasUserEditedRef.current = true; setPomodoroLength(v); }}
+          />
+          <div className="border-t border-white/10" />
+          <Stepper
+            id="short-break-length" label="Short break" min={1} max={30}
+            value={shortBreakLength} disabled={disabled}
+            onChange={(v) => { hasUserEditedRef.current = true; setShortBreakLength(v); }}
+          />
+          <div className="border-t border-white/10" />
+          <Stepper
+            id="long-break-length" label="Long break" min={1} max={60}
+            value={longBreakLength} disabled={disabled}
+            onChange={(v) => { hasUserEditedRef.current = true; setLongBreakLength(v); }}
+          />
         </div>
 
-        {/* Notification Settings */}
-        <div className="glass-panel rounded-2xl p-6 space-y-6">
-          <div className="flex items-center gap-3">
-            <Bell className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
+        {/* Notifications */}
+        <div className="glass-panel rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Bell className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Alerts</h2>
           </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Enable Notifications</p>
-                <p className="text-sm text-muted-foreground">Get notified when timer ends</p>
-              </div>
-              <button
-                aria-label="Toggle Notifications"
-                onClick={() => {
-                  hasUserEditedRef.current = true;
-                  setNotifications(!notifications);
-                }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  notifications ? "bg-primary" : "bg-white/20"
-                }`}
-                disabled={isSaving || isLoadingSettings}
-              >
-                <div
-                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    notifications ? "translate-x-6" : ""
-                  }`}
-                />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground flex items-center gap-2">
-                  <Volume2 className="w-4 h-4" />
-                  Sound Alerts
-                </p>
-                <p className="text-sm text-muted-foreground">Play sound when timer completes</p>
-              </div>
-              <button
-                aria-label="Toggle Sound Alerts"
-                onClick={() => {
-                  hasUserEditedRef.current = true;
-                  setSound(!sound);
-                }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  sound ? "bg-primary" : "bg-white/20"
-                }`}
-                disabled={isSaving || isLoadingSettings}
-              >
-                <div
-                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    sound ? "translate-x-6" : ""
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
+          <ToggleRow
+            label="Notifications" description="Alert when the timer ends"
+            icon={<Bell className="w-4 h-4" />}
+            enabled={notifications} disabled={disabled}
+            onToggle={() => { hasUserEditedRef.current = true; setNotifications(n => !n); }}
+          />
+          <div className="border-t border-white/10" />
+          <ToggleRow
+            label="Sound" description="Play a sound on completion"
+            icon={<Volume2 className="w-4 h-4" />}
+            enabled={sound} disabled={disabled}
+            onToggle={() => { hasUserEditedRef.current = true; setSound(s => !s); }}
+          />
         </div>
 
-        {/* Save Button */}
+        {/* Save */}
         <button
           onClick={handleSave}
-          disabled={isSaving || isLoadingSettings}
-          className={`w-full py-4 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 font-semibold ${
-            (isSaving || isLoadingSettings) ? "bg-white/10 text-muted-foreground cursor-wait" : "bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={disabled}
+          className={`w-full py-3 rounded-xl transition-all flex items-center justify-center gap-2 font-semibold text-sm ${
+            disabled
+              ? "bg-white/10 text-muted-foreground cursor-wait"
+              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl"
           }`}
         >
-          <Save className="w-5 h-5" />
-          {isLoadingSettings ? "Loading settings..." : isSaving ? "Saving..." : "Save Settings"}
+          <Save className="w-4 h-4" />
+          {isLoadingSettings ? "Loading…" : isSaving ? "Saving…" : "Save changes"}
         </button>
-        </div>
+
+      </div>
     </div>
   );
 };
