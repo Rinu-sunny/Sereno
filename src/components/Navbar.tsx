@@ -2,8 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import ProtectedLink from "@/components/ProtectedLink";
-import { Menu, X, Timer, Home, LayoutDashboard, Settings, LogIn, User } from "lucide-react";
-import DarkModeToggle from "./DarkModeToggle"; // Import the dark mode toggle
+import { Menu, X, Timer, Home, LayoutDashboard, Settings, LogIn, User } from "lucide-react";// Import the dark mode toggle
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/supabaseClient";
 
@@ -54,7 +53,7 @@ const Navbar = () => {
               );
             })}
             {/* Dark Mode Toggle Button */}
-            <DarkModeToggle />
+            
 
             {/* Auth area */}
             {isAuthenticated ? (
@@ -125,7 +124,7 @@ const Navbar = () => {
             })}
             {/* Dark Mode Toggle in Mobile Menu */}
             <div className="px-4 py-3">
-              <DarkModeToggle />
+              
             </div>
           </div>
         )}
