@@ -396,7 +396,7 @@ const Auth = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 -z-10" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1),transparent_50%)] -z-10" />
 
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-md space-y-4">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold text-gradient">
