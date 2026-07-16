@@ -247,17 +247,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Chart Placeholder */}
-        <div className="glass-panel rounded-2xl p-6 space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">Weekly Progress</h2>
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
-            <div className="text-center space-y-2">
-              <BarChart3 className="w-16 h-16 mx-auto opacity-50" />
-              <p>Chart will be displayed here</p>
-              <p className="text-sm">Connect to backend to see your progress visualization</p>
-            </div>
-          </div>
-        </div>
+       
       </div>
       )}
     </div>
