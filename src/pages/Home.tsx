@@ -43,7 +43,7 @@ const Home = () => {
       <div className="max-w-6xl mx-auto text-center space-y-4 py-20">
         {/* Hero Section */}
         <div className="space-y-4 animate-fade-in">
-          <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold text-gradient py-2">
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold text-gradient py-1">
             Sereno
           </h1>
           <p className="text-xl sm:text-xl text-foreground/80 max-w-2xl mx-auto">

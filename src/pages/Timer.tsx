@@ -344,8 +344,8 @@ const Timer = () => {
     // - If we just finished a pomodoro, increment pomodoroCount and go to short-break or long-break
     // - If we just finished a break, go back to pomodoro
     if (mode === "pomodoro") {
-      const nextCount = pomodoroCount + 1;
-      setPomodoroCount(nextCount);
+      setPomodoroCount((prevCount) =>{
+      const nextCount = prevCount + 1;
       const giveLong = nextCount % 4 === 0;
       if (giveLong) {
         setMode("long-break");
@@ -354,6 +354,8 @@ const Timer = () => {
         setMode("short-break");
         setTime(shortBreak);
       }
+      return nextCount;
+    });
     } else {
       // finished any break -> back to pomodoro
       setMode("pomodoro");
@@ -453,7 +455,50 @@ const Timer = () => {
     setEndAtMs(Date.now() + (time * 1000));
     setIsRunning(true);
   };
+const handleReset = () => {
+  if (activeSessionId) {
+    void skipBackendSession(activeSessionId);
+    setActiveSessionId(null);
+    setActiveSessionBudgetMinutes(null);
+  }
+  setEndAtMs(null);
+  setIsRunning(false);
 
+  // Reset time based on whatever mode we are currently on
+  if (mode === "pomodoro") setTime(pomodoro);
+  if (mode === "short-break") setTime(shortBreak);
+  if (mode === "long-break") setTime(longBreak);
+};
+const handleSkip = () => {
+  if (activeSessionId) {
+    void skipBackendSession(activeSessionId);
+    setActiveSessionId(null);
+    setActiveSessionBudgetMinutes(null);
+  }
+  setEndAtMs(null);
+  setIsRunning(false);
+
+  if (mode === "pomodoro") {
+    // We skipped a working session. Advance the count to determine break type.
+    setPomodoroCount((prevCount) => {
+      const nextCount = prevCount + 1;
+      const giveLong = nextCount % 4 === 0;
+      
+      if (giveLong) {
+        setMode("long-break");
+        setTime(longBreak);
+      } else {
+        setMode("short-break");
+        setTime(shortBreak);
+      }
+      return nextCount;
+    });
+  } else {
+    // We skipped a short-break or long-break -> cycle straight back to work
+    setMode("pomodoro");
+    setTime(pomodoro);
+  }
+};
   return (
     <div className="min-h-screen pt-24 pb-12 px-4">
       <div className="max-w-6xl mx-auto">
@@ -483,9 +528,9 @@ const Timer = () => {
             {/* Controls */}
             <div className="flex gap-4">
               <button
-                onClick={() => switchMode("pomodoro")}
+                onClick={handleReset}
                 className="p-4 glass-panel rounded-full hover:bg-white/20 transition-all"
-                aria-label="Reset to Pomodoro"
+                aria-label="Reset to current timer"
               >
                 <RotateCcw className="w-6 h-6" />
               </button>
@@ -507,7 +552,7 @@ const Timer = () => {
                 )}
               </button>
               <button
-                onClick={() => switchMode("short-break")}
+                onClick={handleSkip}
                 className="p-4 glass-panel rounded-full hover:bg-white/20 transition-all"
                 aria-label="Skip to Short Break"
               >
