@@ -67,9 +67,12 @@ const toErrorText = (value: unknown): string => {
 const Settings = () => {
   const { toast } = useToast();
   const [cachedAtBoot] = useState<CachedSettings | null>(() => readCachedSettings());
-  const [pomodoroLength, setPomodoroLength] = useState(cachedAtBoot?.workDuration ?? 25);
-  const [shortBreakLength, setShortBreakLength] = useState(cachedAtBoot?.shortBreakDuration ?? 5);
-  const [longBreakLength, setLongBreakLength] = useState(cachedAtBoot?.longBreakDuration ?? 15);
+  
+  // FIXED: Changed type states to allow number OR empty string to avoid stuck zeroes
+  const [pomodoroLength, setPomodoroLength] = useState<number | "">(cachedAtBoot?.workDuration ?? 25);
+  const [shortBreakLength, setShortBreakLength] = useState<number | "">(cachedAtBoot?.shortBreakDuration ?? 5);
+  const [longBreakLength, setLongBreakLength] = useState<number | "">(cachedAtBoot?.longBreakDuration ?? 15);
+  
   const [notifications, setNotifications] = useState(cachedAtBoot?.notificationsEnabled ?? true);
   const [sound, setSound] = useState((cachedAtBoot?.alarmSound ?? "default") !== "muted");
   const [isSaving, setIsSaving] = useState(false);
@@ -135,9 +138,9 @@ const Settings = () => {
         });
 
         saveLocalSettings({
-          workDuration: typeof s.workDuration === "number" ? s.workDuration : pomodoroLength,
-          shortBreakDuration: typeof s.shortBreakDuration === "number" ? s.shortBreakDuration : shortBreakLength,
-          longBreakDuration: typeof s.longBreakDuration === "number" ? s.longBreakDuration : longBreakLength,
+          workDuration: typeof s.workDuration === "number" ? s.workDuration : (Number(pomodoroLength) || 25),
+          shortBreakDuration: typeof s.shortBreakDuration === "number" ? s.shortBreakDuration : (Number(shortBreakLength) || 5),
+          longBreakDuration: typeof s.longBreakDuration === "number" ? s.longBreakDuration : (Number(longBreakLength) || 15),
           notificationsEnabled: typeof s.notificationsEnabled === "boolean" ? s.notificationsEnabled : notifications,
           alarmSound: typeof s.alarmSound === "string" ? s.alarmSound : (sound ? "default" : "muted"),
         });
@@ -171,6 +174,20 @@ const Settings = () => {
   }, [navigate, authChecked, isAuthenticated, applyLocal]);
 
   const handleSave = async () => {
+    // FIXED: Enforce absolute validation rule checking if any field is empty, 0, or negative
+    const pLength = Number(pomodoroLength);
+    const sLength = Number(shortBreakLength);
+    const lLength = Number(longBreakLength);
+
+    if (!pLength || pLength <= 0 || !sLength || sLength <= 0 || !lLength || lLength <= 0) {
+      toast({
+        title: "Invalid Durations",
+        description: "All timer fields must have a value greater than 0.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const token = await getToken();
@@ -181,9 +198,9 @@ const Settings = () => {
       }
 
       const payload = {
-        workDuration: pomodoroLength,
-        shortBreakDuration: shortBreakLength,
-        longBreakDuration: longBreakLength,
+        workDuration: pLength,
+        shortBreakDuration: sLength,
+        longBreakDuration: lLength,
         pomodorosBeforeLongBreak: 4,
         theme: "light",
         alarmSound: sound ? "default" : "muted",
@@ -232,6 +249,16 @@ const Settings = () => {
     }
   };
 
+  // Helper handling conversion logic cleanly while allowing empty inputs to clear out 0
+  const handleInputChange = (val: string, setter: (v: number | "") => void) => {
+    hasUserEditedRef.current = true;
+    if (val === "") {
+      setter("");
+    } else {
+      setter(Number(val));
+    }
+  };
+
   if (!authChecked) return <SettingsSkeleton />;
 
   return (
@@ -245,13 +272,11 @@ const Settings = () => {
         </div>
 
         {/* Timer Settings */}
-        
         <div className="glass-panel rounded-xl p-5 space-y-2 shrink-0">
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 text-primary" />
             <h2 className="text-md font-bold text-foreground">Timer Duration</h2>
           </div>
-          
 
           <div className="space-y-2">
             <div>
@@ -262,7 +287,7 @@ const Settings = () => {
                 id="pomodoro-length"
                 type="number"
                 value={pomodoroLength}
-                onChange={(e) => { hasUserEditedRef.current = true; setPomodoroLength(Number(e.target.value)); }}
+                onChange={(e) => handleInputChange(e.target.value, setPomodoroLength)}
                 className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 min="1" max="60"
                 disabled={isSaving || isLoadingSettings}
@@ -277,7 +302,7 @@ const Settings = () => {
                 id="short-break-length"
                 type="number"
                 value={shortBreakLength}
-                onChange={(e) => { hasUserEditedRef.current = true; setShortBreakLength(Number(e.target.value)); }}
+                onChange={(e) => handleInputChange(e.target.value, setShortBreakLength)}
                 className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 min="1" max="30"
                 disabled={isSaving || isLoadingSettings}
@@ -292,7 +317,7 @@ const Settings = () => {
                 id="long-break-length"
                 type="number"
                 value={longBreakLength}
-                onChange={(e) => { hasUserEditedRef.current = true; setLongBreakLength(Number(e.target.value)); }}
+                onChange={(e) => handleInputChange(e.target.value, setLongBreakLength)}
                 className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 min="1" max="60"
                 disabled={isSaving || isLoadingSettings}
